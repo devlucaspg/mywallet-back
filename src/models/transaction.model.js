@@ -1,7 +1,7 @@
 import joi from "joi";
 
-export const transactionSchema = joi.object({
+export const transactionModel = joi.object({
   value: joi.number().min(1).required(),
   description: joi.string().min(3).required(),
-  type: joi.string("input", "output").required()
+  type: joi.string().valid("input", "output").required()
 });
