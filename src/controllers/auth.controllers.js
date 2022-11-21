@@ -22,12 +22,13 @@ export async function signIn(req, res) {
 
   try {
     const userExists = await usersCollection.findOne({ email });
+    delete userExists.password;
     await sessionsCollection.insertOne({
       token,
       userId: userExists._id,
     });
 
-    res.send({ token });
+    res.send({ ...userExists, token });
   } catch (err) {
     console.log(err);
     res.sendStatus(500);

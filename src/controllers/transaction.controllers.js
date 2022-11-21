@@ -3,12 +3,16 @@ import { transactionsCollection } from "../database/db.js";
 
 export async function newInput(req, res) {
   const transaction = req.body;
+  const transactionAjust = {
+    ...transaction,
+    value: Number(transaction.value.replace(",", ".")).toFixed(2),
+  };
 
   try {
     await transactionsCollection.insertOne({
-      ...transaction,
+      ...transactionAjust,
       type: "input",
-      day: dayjs().format("DD/MM/YYYY HH:mm:ss"),
+      date: dayjs().format("DD/MM"),
     });
     res.sendStatus(201);
   } catch (err) {
@@ -19,12 +23,16 @@ export async function newInput(req, res) {
 
 export async function newOutput(req, res) {
   const transaction = req.body;
+  const transactionAjust = {
+    ...transaction,
+    value: Number(transaction.value.replace(",", ".")).toFixed(2),
+  };
 
   try {
     await transactionsCollection.insertOne({
-      ...transaction,
+      ...transactionAjust,
       type: "output",
-      day: dayjs().format("DD/MM/YYYY"),
+      date: dayjs().format("DD/MM"),
     });
     res.sendStatus(201);
   } catch (err) {
@@ -36,8 +44,24 @@ export async function newOutput(req, res) {
 export async function getTransactions(req, res) {
   try {
     const transactions = await transactionsCollection.find().toArray();
+    let balance;
     console.log(transactions);
-    res.send(transactions);
+
+    if (transactions.length > 0) {
+      balance = transactions.reduce((acc, curr) => {
+        console.log(curr);
+        if (curr.type === "input") {
+          console.log(Number(curr.value));
+          return acc + Number(curr.value);
+        } else {
+          console.log(Number(curr.value));
+          return acc - Number(curr.value);
+        }
+      }, 0);
+
+      console.log(balance);
+    }
+    res.send({transactions, balance});
   } catch (err) {
     console.log(err);
     res.sendStatus(500);
