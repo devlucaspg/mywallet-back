@@ -2,18 +2,19 @@ import dayjs from "dayjs";
 import { transactionsCollection } from "../database/db.js";
 
 export async function newInput(req, res) {
-  const transaction = req.body;
-  const transactionAjust = {
-    ...transaction,
-    value: Number(transaction.value.replace(",", ".")).toFixed(2),
-  };
-
+  const { value, description, user } = res.locals.transactionAdjust; 
+    
   try {
-    await transactionsCollection.insertOne({
-      ...transactionAjust,
+    const transaction = {
+      value: value,
+      description: description,
+      user: user, 
       type: "input",
-      date: dayjs().format("DD/MM"),
-    });
+      date: dayjs().format("DD/MM")
+    }
+    
+    await transactionsCollection.insertOne(transaction);
+
     res.sendStatus(201);
   } catch (err) {
     console.log(err);
@@ -22,18 +23,19 @@ export async function newInput(req, res) {
 }
 
 export async function newOutput(req, res) {
-  const transaction = req.body;
-  const transactionAjust = {
-    ...transaction,
-    value: Number(transaction.value.replace(",", ".")).toFixed(2),
-  };
+  const { value, description, user } = res.locals.transactionAdjust;  
 
   try {
-    await transactionsCollection.insertOne({
-      ...transactionAjust,
+    const transaction = {
+      value: value,
+      description: description,
+      user: user, 
       type: "output",
-      date: dayjs().format("DD/MM"),
-    });
+      date: dayjs().format("DD/MM")
+    }
+
+    await transactionsCollection.insertOne(transaction);
+
     res.sendStatus(201);
   } catch (err) {
     console.log(err);
@@ -42,24 +44,23 @@ export async function newOutput(req, res) {
 }
 
 export async function getTransactions(req, res) {
+  const user = res.locals.user
   try {
-    const transactions = await transactionsCollection.find().toArray();
+    const transactions = await transactionsCollection.find({user: user._id}).toArray();
     let balance;
-    console.log(transactions);
 
     if (transactions.length > 0) {
       balance = transactions.reduce((acc, curr) => {
-        console.log(curr);
+        //console.log(curr);
         if (curr.type === "input") {
-          console.log(Number(curr.value));
+
           return acc + Number(curr.value);
         } else {
-          console.log(Number(curr.value));
+
           return acc - Number(curr.value);
         }
       }, 0);
 
-      console.log(balance);
     }
     res.send({transactions, balance});
   } catch (err) {

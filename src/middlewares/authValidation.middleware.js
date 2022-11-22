@@ -16,7 +16,7 @@ export async function authValidation(req, res, next) {
       return res.sendStatus(401);
     }
 
-    req.user = user;
+    res.locals.user = user;
 
   } catch (err) {
     console.log(err);
